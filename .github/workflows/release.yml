@@ -1,0 +1,33 @@
+name: Publish to GitHub Packages
+
+on:
+  push:
+    tags:
+      - 'v*' # 「v1.0.0」などのタグがプッシュされたら実行
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # パッケージ書き込み権限を付与
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        # ★これだけで、Maven用の設定ファイル(settings.xml)を自動生成してくれる
+        server-id: github
+        server-username: GITHUB_ACTOR
+        server-password: GITHUB_TOKEN
+
+    # 自動生成された設定を使ってデプロイを実行
+    - name: Publish package
+      run: mvn -B deploy
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
